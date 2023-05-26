@@ -1,5 +1,7 @@
 import psycopg2
 from config import DB_USER, DB_HOST, DB_NAME, DB_PASSWORD
+from utils.halpers import read_json, format_price
+import random
 
 
 class DataBase:
@@ -43,6 +45,31 @@ class TableCreator(DataBase):
         """
         self.manager(sql, commit=True)
 
+    def create_category_table(self):
+        sql = """
+            DROP TABLE IF EXISTS categories;
+            CREATE TABLE IF NOT EXISTS categories(
+                category_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                category_title TEXT
+            );
+        """
+        self.manager(sql, commit=True)
+
+    def create_products_table(self):
+        sql = """
+            DROP TABLE IF EXISTS products;
+            CREATE TABLE IF NOT EXISTS products(
+                product_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                name TEXT,
+                img_url TEXT,
+                price INTEGER,
+                quantity INTEGER,
+                description TEXT,
+                category_id INTEGER REFERENCES categories(category_id)
+            );
+        """
+        self.manager(sql, commit=True)
+
 
 class UserManager(DataBase):
     """Работа с таблицей пользователя."""
@@ -63,4 +90,44 @@ class MainManager:
 
 # creator = TableCreator()
 # creator.create_users_table()
+# creator.create_category_table()
+# creator.create_products_table()
 
+
+def fill_categories_table(file_path, db: DataBase):
+    categories = read_json(file_path)
+    sql = "INSERT INTO categories(category_title) VALUES (%s);"
+    for category in categories:
+        db.manager(sql, category, commit=True)
+        print(f"Добавили категорию {category}")
+
+
+# fill_categories_table("../categories.json", DataBase())
+
+
+def fill_products_table(file_path, db: DataBase):
+    product_json = read_json(file_path)
+    sql = """
+        INSERT INTO products(name, img_url, price, quantity, description, category_id)
+        VALUES(%s, %s, %s, %s, %s, %s);
+    """
+    for item in product_json:
+        categories_sql = "SELECT category_id FROM categories WHERE category_title = %s"
+        category_id = db.manager(categories_sql, item["category_name"], fetchone=True)[0]
+        for product in item["products"]:
+            quantity = random.randrange(1, 51)
+            price = format_price(product["product_current_price"])
+            db.manager(
+                sql,
+                product["product_name"],
+                product["product_img_url"],
+                price,
+                quantity,
+                product["description"],
+                category_id,
+                commit=True
+            )
+            print(f"Добавили продукт: {product['product_name']}")
+
+
+fill_products_table("../products.json", DataBase())
