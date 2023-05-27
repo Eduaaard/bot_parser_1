@@ -18,3 +18,28 @@ def start_menu(chat_id):
     )
     return markup
 
+
+def categories_menu():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+    categories = manager.category.get_categories()
+    markup.row(
+        KeyboardButton(text="Назад")
+    )
+    buttons = [KeyboardButton(text=category) for category in categories]
+
+    markup.add(*buttons)
+    return markup
+
+
+def get_products_by_category(category_id):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+    products = manager.product.get_products_by_category(category_id)
+    markup.row(
+        KeyboardButton(text="Назад")
+    )
+    buttons = [KeyboardButton(text=product) for product in products]
+
+    markup.add(*buttons)
+    return markup
+
+

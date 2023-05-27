@@ -83,9 +83,35 @@ class UserManager(DataBase):
         self.manager(sql, name, phone_number, chat_id, commit=True)
 
 
+class CategoryManager(DataBase):
+    def get_categories(self):
+       sql = "SELECT category_title FROM categories;"
+       categories = self.manager(sql, fetchall=True)
+       return [category[0] for category in categories]
+
+    def get_category_id(self, category_name):
+        sql = "SELECT category_id FROM categories WHERE category_title = %s;"
+        return self.manager(sql, category_name, fetchone=True)[0]
+
+
+class ProductManager(DataBase):
+    def get_products_by_category(self, category_id):
+        sql = "SELECT name FROM products WHERE category_id = %s;"
+        titles = self.manager(sql, category_id, fetchall=True)
+        return [title[0] for title in titles]
+
+    def get_product_info(self, product_name):
+        sql = """
+            SELECT product_id, img_url, price, quantity, description
+            FROM products WHERE name = %s
+        """
+        return self.manager(sql, product_name, fetchone=True)
+
 class MainManager:
     def __init__(self):
         self.user: UserManager = UserManager()
+        self.category: CategoryManager = CategoryManager()
+        self.product: ProductManager = ProductManager()
 
 
 # creator = TableCreator()
@@ -130,4 +156,4 @@ def fill_products_table(file_path, db: DataBase):
             print(f"Добавили продукт: {product['product_name']}")
 
 
-fill_products_table("../products.json", DataBase())
+# fill_products_table("../products.json", DataBase())

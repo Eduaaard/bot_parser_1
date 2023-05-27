@@ -4,7 +4,7 @@ ADMINS = ''
 
 DB_NAME = 'shop'
 DB_HOST = 'localhost'
-DB_PASSWORD = '123'
+DB_PASSWORD = '123456'
 DB_PORT = ''
 DB_USER = 'postgres'
 
