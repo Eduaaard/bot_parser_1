@@ -1,6 +1,8 @@
 from telebot.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from data.loader import bot, manager
 from keyboards.default import start_menu, categories_menu, get_products_by_category
+from keyboards.inline import to_cart_menu
+
 
 @bot.message_handler(func=lambda msg: msg.text == "Регистрация")
 def start_register(message: Message):
@@ -66,13 +68,6 @@ def get_product_info(message: Message):
 Цена: {price} сум
 Количество: {quantity}
 {description[90:300]}
-""")
+""", reply_markup=to_cart_menu(product_id))
 
-"""
-{message.text}
 
-Цена: {price} сум
-Количество: {quantity}
-
-{description[1:100]}
-"""

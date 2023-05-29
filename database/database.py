@@ -33,6 +33,39 @@ class DataBase:
 
 
 class TableCreator(DataBase):
+    def create_cart_table(self):
+        sql = """
+            DROP TABLE IF EXISTS cart CASCADE;
+            CREATE TABLE IF NOT EXISTS cart(
+                cart_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                user_id INTEGER NOT NULL UNIQUE,
+                total_quantity INTEGER DEFAULT 0,
+                total_price INTEGER DEFAULT 0,
+
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
+            );
+        """
+        self.manager(sql, commit=True)
+
+    def create_cart_products_table(self):
+        sql = """
+            DROP TABLE IF EXISTS cart_products;
+            CREATE TABLE IF NOT EXISTS cart_product(
+                cart_product_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                cart_id INTEGER NOT NULL,
+                product_id INTEGER NOT NULL,
+
+                quantity INTEGER DEFAULT 0,
+                price INTEGER,
+
+                FOREIGN KEY (cart_id) REFERENCES cart(cart_id),
+                FOREIGN KEY (product_id) REFERENCES products(product_id),
+
+                UNIQUE(cart_id, product_id)
+            );
+        """
+        self.manager(sql, commit=True)
+
     def create_users_table(self):
         sql = """
             DROP TABLE IF EXISTS users;
@@ -85,9 +118,9 @@ class UserManager(DataBase):
 
 class CategoryManager(DataBase):
     def get_categories(self):
-       sql = "SELECT category_title FROM categories;"
-       categories = self.manager(sql, fetchall=True)
-       return [category[0] for category in categories]
+        sql = "SELECT category_title FROM categories;"
+        categories = self.manager(sql, fetchall=True)
+        return [category[0] for category in categories]
 
     def get_category_id(self, category_name):
         sql = "SELECT category_id FROM categories WHERE category_title = %s;"
@@ -107,6 +140,28 @@ class ProductManager(DataBase):
         """
         return self.manager(sql, product_name, fetchone=True)
 
+    def get_product_quantity(self, product_id):
+        sql = "SELECT quantity FROM products WHERE product_id = %s;"
+        return self.manager(sql, product_id, fetchone=True)[0]
+
+    def get_product_price(self, product_id):
+        sql = "SELECT price FROM products WHERE product_id = %s;"
+        return self.manager(sql, product_id, fetchone=True)[0]
+
+
+class CartManager(DataBase):
+    def add_user_id(self, user_id):
+        pass
+
+    def get_cart_id(self, user_id):
+        pass
+
+
+class CartProductManager(DataBase):
+    def update(self, cart_id, product_id, price, quantity):
+        pass
+
+
 class MainManager:
     def __init__(self):
         self.user: UserManager = UserManager()
@@ -114,7 +169,9 @@ class MainManager:
         self.product: ProductManager = ProductManager()
 
 
-# creator = TableCreator()
+creator = TableCreator()
+# creator.create_cart_table()
+# creator.create_cart_products_table()
 # creator.create_users_table()
 # creator.create_category_table()
 # creator.create_products_table()
@@ -154,6 +211,5 @@ def fill_products_table(file_path, db: DataBase):
                 commit=True
             )
             print(f"Добавили продукт: {product['product_name']}")
-
 
 # fill_products_table("../products.json", DataBase())
